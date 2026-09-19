@@ -33,6 +33,21 @@ class AmountsTest {
                 Amounts.first("Rs.45,000.00 credited to a/c **4821 on 01-07-26 at "
                         + "09:02 by SALARY CREDIT. Avl Bal: Rs.93,211.40"));
     }
+    // Regression test for whole-rupee transaction amounts followed by a balance.
+    @Test
+    void readsWholeRupeeAmountWithoutDecimal() {
+        assertEquals(new BigDecimal("5.00"),
+                Amounts.first("Rs.5 debited from a/c **4821 on 04-07-26 at 11:54 "
+                        + "to UPI/WATER CAN. Avl Bal: Rs.92,213.10."));
+    }
+
+    @Test
+    void readsWholeRupeeInrAmountWithThousandsSeparator() {
+        assertEquals(new BigDecimal("18000.00"),
+                Amounts.first("Dear Customer, Acct XX9075 is credited with INR 18,000 "
+                        + "on 01/07/2026 21:14. Info: NEFT INWARD SELF. "
+                        + "Avl Bal Rs.49,882.25 -ICICI Bank"));
+    }
 
     @Test
     void readsTheStatedBalance() {

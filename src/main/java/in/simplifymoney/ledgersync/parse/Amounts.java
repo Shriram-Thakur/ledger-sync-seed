@@ -14,8 +14,9 @@ public final class Amounts {
 
     private Amounts() {}
 
+    // Fixed incident bug
     private static final Pattern AMOUNT =
-            Pattern.compile("(?:Rs\\.?|INR)\\s*([0-9,]+\\.[0-9]{2})");
+            Pattern.compile("(?:Rs\\.?|INR)\\s*([0-9,]+(?:\\.[0-9]{2})?)");
 
     private static final Pattern BALANCE = Pattern.compile(
             "(?:Avl\\s*Bal|Available\\s*Balance|BalAvl|Avl\\s*Limit)\\s*:?\\s*"
