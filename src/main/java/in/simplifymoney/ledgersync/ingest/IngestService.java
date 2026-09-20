@@ -45,7 +45,8 @@ public final class IngestService {
                 skipped++;
                 continue;
             }
-            store.save(toTransaction(p.get()));
+//            store.save(toTransaction(p.get()));
+            store.saveOrMerge(toTransaction(p.get()));
             parsed++;
         }
         return new Stats(messages.size(), parsed, skipped);

@@ -96,6 +96,68 @@ public final class SqlLedgerStore implements LedgerStore, AutoCloseable {
     }
 
     @Override
+    public void saveOrMerge(NormalizedTxn t) {
+
+        String selectSql =
+                "SELECT id, merchant, source_message_ids "
+                        + "FROM ledger "
+                        + "WHERE account_last4 = ? "
+                        + "AND occurred_at = ? "
+                        + "AND direction = ? "
+                        + "AND amount = ? "
+                        + "ORDER BY id";
+
+        try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
+
+            ps.setString(1, t.accountLast4());
+            ps.setString(2, t.occurredAt().toString());
+            ps.setString(3, t.direction().name());
+            ps.setBigDecimal(4, t.amount());
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                if (!rs.next()) {
+                    save(t);
+                    return;
+                }
+
+                long id = rs.getLong("id");
+
+                List<String> sourceIds = new ArrayList<>();
+
+                String existingIds = rs.getString("source_message_ids");
+
+                if (existingIds != null && !existingIds.isBlank()) {
+                    sourceIds.addAll(
+                            Arrays.stream(existingIds.split(","))
+                                    .filter(s -> !s.isBlank())
+                                    .toList()
+                    );
+                }
+
+                sourceIds.addAll(t.sourceMessageIds());
+
+                sourceIds = sourceIds.stream()
+                        .distinct()
+                        .sorted()
+                        .toList();
+
+                try (PreparedStatement update = conn.prepareStatement(
+                        "UPDATE ledger SET source_message_ids = ? WHERE id = ?")) {
+
+                    update.setString(1, String.join(",", sourceIds));
+                    update.setLong(2, id);
+                    update.executeUpdate();
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new IllegalStateException(
+                    "could not save or merge " + t, e);
+        }
+    }
+
+    @Override
     public List<NormalizedTxn> all() {
         List<NormalizedTxn> out = new ArrayList<>();
         try (Statement st = conn.createStatement();

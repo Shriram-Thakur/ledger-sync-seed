@@ -13,6 +13,7 @@ public interface LedgerStore {
 
     void save(NormalizedTxn txn);
 
+    void saveOrMerge(NormalizedTxn txn);
     List<NormalizedTxn> all();
 
     long count();
